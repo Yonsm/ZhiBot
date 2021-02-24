@@ -53,13 +53,12 @@ async def handleRequest(hass, request):
 
 
 async def discoveryDevice(hass):
-    from aiohttp import ClientSession
-    async with ClientSession() as session:
-        async with session.get('https://open.bot.tmall.com/oauth/api/placelist') as resp:
-            places = (await resp.json())['data']
-        async with session.get('https://open.bot.tmall.com/oauth/api/aliaslist') as resp:
-            aliases = (await resp.json())['data']
-            aliases.append({'key': '电视', 'value': ['电视机']})
+    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    r = await session.get('https://open.bot.tmall.com/oauth/api/placelist')
+    places = (await r.json())['data']
+    r = await session.get('https://open.bot.tmall.com/oauth/api/aliaslist')
+    aliases = (await r.json())['data']
+    aliases.append({'key': '电视', 'value': ['电视机']})
 
     states = hass.states.async_all()
     groups_ttributes = groupsAttributes(states)

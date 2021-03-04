@@ -1,0 +1,8 @@
+{
+	"domain": "zhibot",
+	"name": "Zhi Bot Platform",
+	"documentation": "https://github.com/Yonsm/ZhiBot",
+	"requirements": [],
+	"dependencies": ["zhimsg"],
+	"codeowners": ["@Yonsm"]
+}

@@ -7,10 +7,10 @@ async def zhiChat(hass, query):
     #query = question.strip()
     _LOGGER.debug("QUERY: %s", query)
     if not query:
-        return "少说空话"
+        return "空谈误国，实干兴邦！"
 
-    if query == '全部动作':
-        return '打开/关闭（设备名或群组名）、查询（设备名或群组名，可省略）、触发（自动化，可省略）'
+    if query == '全部动作' or query == '?' or query == '？':
+        return '打开/关闭（设备或群组名）；查询（设备或群组名，可省略“查询”）；触发（自动化，可省略“触发”）'
 
     states = hass.states.async_all()
     names = [] if query == "全部设备" else None

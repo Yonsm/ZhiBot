@@ -1,11 +1,8 @@
 # curl -k -H "Authorization: Bearer $HA_TOKEN" -H "token: $ZHI_TOKEN" -d '{"conversationId": "conversationId", "atUsers": [{"dingtalkId": "dingtalkId"}], "chatbotUserId": "chatbotUserId", "msgId": "msgId", "senderNick": "Yonsm", "isAdmin": false, "sessionWebhookExpiredTime": 1613505952713, "createAt": 1613500552475, "conversationType": "2", "senderId": "senderId", "conversationTitle": "智能家庭", "isInAtList": true, "sessionWebhook": "sessionWebhook", "text": {"content": "您好"}, "msgtype": "text"}' "https://localhost:8123/er_tong_fang_yin_xiang"
 from . import basebot
 from .zhichat import zhiChat
-from ..zhimsg import async_send
 
 import json
-import logging
-_LOGGER = logging.getLogger(__name__)
 
 
 class dingbot(basebot):
@@ -19,6 +16,7 @@ class dingbot(basebot):
     async def async_handle(self, data):
         query = data['text']['content'].strip()
         if self.name:
+            from ..zhimsg import async_send
             result = await async_send(self.name, query)
             if result is None or isinstance(result, str):
                 return result

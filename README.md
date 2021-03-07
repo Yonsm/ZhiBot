@@ -21,7 +21,7 @@ zhibot:
     - platform: genie
 ```
 
-无需配置 `token`，会修正 HA 的 OAuth 认证方式延长认证有效期（借鉴来的套路，参见 [oauthbot](https://github.com/Yonsm/ZhiBot/blob/main/custom_components/zhibot/__init__.py)，我也没搞明白）。
+无需配置 `token`，会修正 HA 的 OAuth 认证方式延长认证有效期（借鉴来的套路，参见 [oauthbot](https://github.com/Yonsm/ZhiBot/blob/main/custom_components/zhibot/__init__.py)，我也没搞明白）。建议配置 `token`，这样不用重写 HA 的 OAuth 认证有效期，此时下文中的 `网关 URL` 将变成 `https://xxx.xxx.xxx:8123//geniebot?token=******`。
 
 ### 2. 天猫精灵开放平台设置
 

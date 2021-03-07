@@ -1,4 +1,4 @@
-# ZhiBot
+# [https://github.com/Yonsm/ZhiBot](https://github.com/Yonsm/ZhiBot)
 
 Uniform Bot Platform for HomeAssistant
 
@@ -90,7 +90,7 @@ _**注意**：`zhibot` 的 `- platform: ding` 没有配置 `name `。_
 
 ### 2. 钉钉群机器人设置
 
-![HASS-DING](HASS-DING.png)
+![HASS-DING](https://github.com/Yonsm/ZhiBot/blob/main/HASS-DING.png)
 
 ### 3. 使用方式
 
@@ -135,7 +135,7 @@ _**注意**：必须配置 `name`，并和 `ZhiMsg` 的小爱音箱同名。_
 
 ### 2. 钉钉群机器人设置
 
-![HASS-MIAI](HASS-MIAI.png)
+![HASS-MIAI](https://github.com/Yonsm/ZhiBot/blob/main/HASS-MIAI.png)
 
 ### 3. 使用方式
 

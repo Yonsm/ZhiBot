@@ -2,6 +2,7 @@
 	"domain": "zhibot",
 	"name": "Zhi Bot Platform",
 	"documentation": "https://github.com/Yonsm/ZhiBot",
+	"version": "1.0.1",
 	"requirements": [],
 	"dependencies": [],
 	"codeowners": ["@Yonsm"]

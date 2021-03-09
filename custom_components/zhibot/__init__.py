@@ -45,7 +45,7 @@ class basebot(HomeAssistantView):
     async def post(self, request):
         try:
             data = await request.json()
-            _LOGGER.debug(f"REQUEST: %s", data)
+            _LOGGER.info(f"REQUEST: %s", data)
             if await self.async_check(request, data):
                 result = await self.async_handle(data)
             else:

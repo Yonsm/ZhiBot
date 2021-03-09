@@ -32,7 +32,6 @@ async def handleRequest(hass, request):
     """Handle request"""
     header = request['header']
     payload = request['payload']
-    _LOGGER.debug("Handle Request: %s", request)
 
     properties = None
     name = header['name']
@@ -43,7 +42,7 @@ async def handleRequest(hass, request):
         _payload = await controlDevice(hass, header, payload)
     elif namespace == 'AliGenie.Iot.Device.Query':
         properties = queryDevice(hass, payload)
-        _payload = errorPayload('IOT_DEVICE_OFFLINE') if properties is None else {} 
+        _payload = errorPayload('IOT_DEVICE_OFFLINE') if properties is None else {}
     else:
         _payload = errorPayload('SERVICE_ERROR')
 
@@ -53,15 +52,8 @@ async def handleRequest(hass, request):
 
 
 async def discoveryDevice(hass):
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
-    async with session.get('https://open.bot.tmall.com/oauth/api/placelist') as r:
-        places = (await r.json())['data']
-    async with session.get('https://open.bot.tmall.com/oauth/api/aliaslist') as r:
-        aliases = (await r.json())['data']
-        aliases.append({'key': '电视', 'value': ['电视机']})
-
     states = hass.states.async_all()
-    groups_ttributes = groupsAttributes(states)
+    groups_attributes = groupsAttributes(states)
 
     devices = []
     for state in states:
@@ -75,16 +67,9 @@ async def discoveryDevice(hass):
             continue
 
         entity_id = state.entity_id
-        deviceType = guessDeviceType(entity_id, attributes)
-        if not deviceType:
-            continue
-
-        deviceName = guessDeviceName(friendly_name, attributes, places)
-        if not checkAliasName(deviceName, entity_id, aliases):
-            continue
-
-        zone = guessZone(entity_id, attributes, groups_ttributes, places)
-        if not zone:
+        zone, deviceName = guessZoneName(entity_id, friendly_name, attributes, groups_attributes)
+        deviceType = guessDeviceType(entity_id, deviceName, attributes)
+        if deviceType is None:
             continue
 
         prop, action = guessPropertyAndAction(entity_id, attributes, state.state)
@@ -181,108 +166,120 @@ def getControlService(action):
     return service
 
 
-DEVICE_TYPES = [
-    'television',  # : '电视',
-    'light',  # : '灯',
-    'aircondition',  # : '空调',
-    'airpurifier',  # : '空气净化器',
-    'outlet',  # : '插座',
-    'switch',  # : '开关',
-    'roboticvacuum',  # : '扫地机器人',
-    'curtain',  # : '窗帘',
-    'humidifier',  # : '加湿器',
-    'fan',  # : '风扇',
-    'bottlewarmer',  # : '暖奶器',
-    'soymilkmaker',  # : '豆浆机',
-    'kettle',  # : '电热水壶',
-    'waterdispenser',  # : '饮水机',
-    'camera',  # : '摄像头',
-    'router',  # : '路由器',
-    'cooker',  # : '电饭煲',
-    'waterheater',  # : '热水器',
-    'oven',  # : '烤箱',
-    'waterpurifier',  # : '净水器',
-    'fridge',  # : '冰箱',
-    'STB',  # : '机顶盒',
-    'sensor',  # : '传感器',
-    'washmachine',  # : '洗衣机',
-    'smartbed',  # : '智能床',
-    'aromamachine',  # : '香薰机',
-    'window',  # : '窗',
-    'kitchenventilator',  # : '抽油烟机',
-    'fingerprintlock',  # : '指纹锁',
-    'telecontroller',  # : '万能遥控器',
-    'dishwasher',  # : '洗碗机',
-    'dehumidifier',  # : '除湿机',
-    'dryer',  # : '干衣机',
-    'wall-hung-boiler',  # : '壁挂炉',
-    'microwaveoven',  # : '微波炉',
-    'heater',  # : '取暖器',
-    'mosquito-dispeller',  # : '驱蚊器',
-    'treadmill',  # : '跑步机',
-    'smart-gating',  # : '智能门控(门锁)',
-    'smart-band',  # : '智能手环',
-    'hanger',  # : '晾衣架',
-]
+ZONE_PLACES = ['门口', '客厅', '卧室', '客房', '主卧', '次卧', '书房', '餐厅', '厨房', '洗手间', '浴室', '阳台', '宠物房', '老人房', '儿童房', '婴儿房', '保姆房', '玄关', '一楼',
+               '二楼', '三楼', '四楼', '楼梯', '走廊', '过道', '楼上', '楼下', '影音室', '娱乐室', '工作间', '杂物间', '衣帽间', '吧台', '花园', '温室', '车库', '休息室', '办公室', '起居室']
 
-INCLUDE_DOMAINS = {
+TYPE_NAMES = {
+    'television': ['电视'],
+    'light': ['灯', '房灯', '吸顶灯', '床头灯', '床灯', '电灯', '吊灯', '台灯', '落地灯', '壁灯', '挂灯', '射灯', '筒灯', '灯带', '灯条', '暗藏灯', '背景灯', '阅读灯', '柜灯', '衣柜灯', '天花灯', '路灯', '彩灯'],
+    'aircondition': ['空调', '空气调节器', '挂式空调'],
+    'airpurifier': ['空气净化器', '空净', '空气清洁器', '净化器'],
+    'outlet': ['插座', '插头', '排插单孔单控'],
+    'switch': ['开关'],
+    'roboticvacuum': ['扫地机器人', '扫地机', '打扫机', '自动打扫机'],
+    'curtain': ['窗帘', '窗纱', '布帘', '纱帘', '百叶帘', '卷帘'],
+    'humidifier': ['加湿器', '空气加湿器', '加湿机', '空气加湿机'],
+    'fan': ['风扇', '电风扇', '落地扇', '电扇', '台扇', '壁扇', '顶扇', '驱蚊风扇', '暖风扇', '净化暖风扇', '冷风扇', '塔扇'],
+    'milkregulator': ['暖奶器', '热奶器', '牛奶', '调奶器', '温奶器', '冲奶机'],
+    'soymilkmaker': ['豆浆机'],
+    'kettle': ['电热水壶', '养生水壶', '水壶', '养生壶', '热水壶', '电水壶'],
+    'waterdispenser': ['饮水机'],
+    'camera': ['摄像头', '摄像', '摄像机'],
+    'router': ['路由器', '路由', '智能路由器'],
+    'cooker': ['电饭煲', '电饭锅', '饭煲', '饭锅'],
+    'waterheater': ['热水器', '电热水器', '燃气热水器'],
+    'oven': ['烤箱', '嵌入式烤箱'],
+    'waterpurifier': ['净水器', '净水器箱型'],
+    'fridge': ['冰箱', '双开门冰箱', '冰柜'],
+    'STB': ['机顶盒', '电视盒子', '盒子', '小米盒子', '荣耀盒子', '乐视盒子', '智能盒子'],
+    'sensor': ['传感器'],
+    'washmachine': ['洗衣机', '顶开式洗衣机', '滚筒洗衣机'],
+    'smartbed': ['智能床'],
+    'aromamachine': ['香薰机'],
+    'window': ['窗'],
+    'kitchenventilator': ['抽油烟机', '抽烟机', '烟机'],
+    'fingerprintlock': ['指纹锁'],
+    'telecontroller': ['万能遥控器'],
+    'dishwasher': ['洗碗机', '洗碗器'],
+    'dehumidifier': ['除湿机', '除湿器'],
+    'dryer': ['干衣机', '干衣器'],
+    'wall-hung-boiler': ['壁挂炉'],
+    'microwaveoven': ['微波炉'],
+    'heater': ['取暖器', '加热器', '地暖'],
+    'mosquitoDispeller': ['驱蚊器'],
+    'treadmill': ['跑步机'],
+    'smart-gating': ['智能门控(门锁)'],
+    'smart-band': ['智能手环'],
+    'hanger': ['晾衣架', '衣架', '晒衣架'],
+    'bloodPressureMeter': ['血压仪'],
+    'bloodGlucoseMeter': ['血糖仪'],
+    'blanket': ['电热毯'],
+    'VMC': ['新风机'],
+    'projector': ['投影仪', '投影机', '投影', '背投'],
+    'gateway': ['网关']
+}
+
+DOMAIN_TYPES = {
     'climate': 'aircondition',
+    'cover': 'curtain',
     'fan': 'fan',
-    'sensor': 'sensor',
     'light': 'light',
     'media_player': 'television',
     # 'remote': 'telecontroller',
     'switch': 'switch',
     'vacuum': 'roboticvacuum',
-    'cover': 'curtain',
 }
 
-EXCLUDE_DOMAINS = [
-    'automation',
-    'binary_sensor',
-    'device_tracker',
-    'group',
-    'zone',
-]
 
-
-def guessDeviceType(entity_id, attributes):
-    # http://doc-bot.tmall.com/docs/doc.htm?treeId=393&articleId=108271&docType=1
+def guessDeviceType(entity_id, deviceName, attributes):
     if 'genie_deviceType' in attributes:
         return attributes['genie_deviceType']
 
-    # Exclude with domain
-    domain = entity_id[: entity_id.find('.')]
-    if domain in EXCLUDE_DOMAINS:
+    domain = entity_id[:entity_id.find('.')]
+    if domain == 'sensor':
+        return 'sensor'
+
+    elif domain not in DOMAIN_TYPES:
         return None
 
-    # Map from domain
-    return INCLUDE_DOMAINS[domain] if domain in INCLUDE_DOMAINS else None
+    for k, v in TYPE_NAMES.items():
+        if deviceName in v:
+            return k
+
+    # for v in VOID_NAMES:
+    #     if deviceName in v:
+    #         return DOMAIN_TYPES[domain]
+
+    _LOGGER.warn('%s “%s”不是规范的名称，请参考 https://github.com/Yonsm/ZhiBot#4-名称规范', entity_id, deviceName)
+    return DOMAIN_TYPES[domain]
 
 
-def guessDeviceName(friendly_name, attributes, places):
-    if 'genie_deviceName' in attributes:
-        return attributes['genie_deviceName']
+def guessZoneName(entity_id, friendly_name, attributes, groups_attributes):
+    zone = None
+    name = attributes.get('genie_deviceName')
+    for place in ZONE_PLACES:
+        if name and name.startswith(place):
+            zone = place
+            name = name[len(place):]
+            break
+        elif friendly_name.startswith(place):
+            zone = place
+            if not name:
+                name = friendly_name[len(place):]
+            break
+    return (attributes.get('genie_zone', zone) or guessGroupZone(entity_id, groups_attributes) or place, name or friendly_name)
 
-    # Remove place prefix
-    for place in places:
-        if friendly_name.startswith(place):
-            return friendly_name[len(place):]
 
-    return friendly_name
-
-
-def checkAliasName(deviceName, entity_id, aliases):
-    if entity_id.startswith('sensor'):
-        return True
-
-    # Name validation
-    for alias in aliases:
-        if deviceName == alias['key'] or deviceName in alias['value']:
-            return True
-
-    _LOGGER.error('%s is not a valid name in https://open.bot.tmall.com/oauth/api/aliaslist', deviceName)
-    return False
+def guessGroupZone(entity_id, groups_attributes):
+    # Guess zone from group
+    for group_attributes in groups_attributes:
+        for child_entity_id in group_attributes['entity_id']:
+            if child_entity_id == entity_id:
+                group_zone = group_attributes.get('genie_zone', group_attributes['friendly_name'])
+                if group_zone in ZONE_PLACES:
+                    return group_zone
+                break
+    return None
 
 
 def groupsAttributes(states):
@@ -295,28 +292,6 @@ def groupsAttributes(states):
             if 'entity_id' in group_attributes:
                 groups_attributes.append(group_attributes)
     return groups_attributes
-
-
-def guessZone(entity_id, attributes, groups_attributes, places):
-    # https://open.bot.tmall.com/oauth/api/placelist
-    if 'genie_zone' in attributes:
-        return attributes['genie_zone']
-
-    # Guess with friendly_name prefix
-    name = attributes['friendly_name']
-    for place in places:
-        if name.startswith(place):
-            return place
-
-    # Guess from HomeAssistant group
-    for group_attributes in groups_attributes:
-        for child_entity_id in group_attributes['entity_id']:
-            if child_entity_id == entity_id:
-                if 'genie_zone' in group_attributes:
-                    return group_attributes['genie_zone']
-                return group_attributes['friendly_name']
-
-    return None
 
 
 def guessPropertyAndAction(entity_id, attributes, state):

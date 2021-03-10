@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# https://www.yuque.com/qw5nze/ga14hc/bqd045
 
 from html.parser import HTMLParser
 from urllib.request import urlopen
@@ -6,88 +7,78 @@ import sys
 import json
 
 
-class AliGenieDeviceTypeParser(HTMLParser):
+class TypeParser(HTMLParser):
 
-    def __init__(self, *, convert_charrefs=True):
-        super().__init__(convert_charrefs=convert_charrefs)
+    def __init__(self, url, begin_row=0, begin_col=0):
+        super().__init__()
         self.result = {}
-        self._is_td = False
-        self._is_key = False
+        self._begin_row = begin_row
+        self._begin_col = begin_col
+        self._row = -1
+        self._col = -1
+        self._in_td = False
+        self.feed(urlopen(url).read().decode('utf-8'))
 
     def handle_starttag(self, tag, attrs):
-        self._is_td = tag == 'td'
+        self._in_td = tag == 'td'
+        if self._in_td:
+            self._col += 1
+        elif tag == 'tr':
+            self._row += 1
+            self._col = -1
 
     def handle_endtag(self, tag):
-        self._is_td = False
+        self._in_td = False
 
     def handle_data(self, data):
-        if self._is_td:
-            if self._is_key:
-                self.result[data.strip()] = self._value
-            else:
+        if self._in_td and self._row >= self._begin_row:
+            if self._col == self._begin_col:
                 self._value = data.strip()
-            self._is_key = not self._is_key
+            elif self._col == self._begin_col + 1:
+                self.result[data.strip()] = self._value
+
+    def merge_aliases(self, aliases):
+        for k, v in self.result.items():
+            if v in aliases:
+                self.result[k] = aliases[v]
+                del aliases[v]
+            else:
+                self.result[k] = [v]
+
+    def hack_aliases(self, hack, aliases):
+        for k, vs in hack.items():
+            for v in vs:
+                if v in aliases:
+                    alias = aliases[v]
+                    del aliases[v]
+                else:
+                    alias = [v]
+                if k in self.result:
+                    self.result[k].extend(alias)
+                else:
+                    self.result[k] = alias
 
 
 # Parse type name
-parser = AliGenieDeviceTypeParser()
-parser.feed(urlopen('https://doc-bot.tmall.com/docs/doc.htm?articleId=108271&docType=1').read().decode('utf-8'))
-
-# Add hack type
-parser.result['VMC'] = '新风机'
-parser.result['projector'] = '投影仪'
-parser.result['gateway'] = '网关'  # TEST
-
-aliases = {i['key']: i['value'] for i in json.load(urlopen('https://open.bot.tmall.com/oauth/api/aliaslist'))['data']}
-
-# Merge type names
-type_names = {}
-for k, v in parser.result.items():
-    if v in aliases:
-        alias = aliases[v]
-        if v not in alias:
-            alias.insert(0, v)
-        type_names[k] = alias
-        del aliases[v]
-    else:
-        type_names[k] = [v]
-
-# Merge hack type
-TYPE_ALIAS = {
-    'heater': ['地暖'],  # TEST
-    'STB': ['电视盒子'],  # TEST
-    'airpurifier': ['净化器'],
-}
-for k, vs in TYPE_ALIAS.items():
-    for v in vs:
-        if v in aliases:
-            alias = aliases[v]
-            del aliases[v]
-            if v not in alias:
-                alias.insert(0, v)
-        else:
-            alias = [v]
-        if k in type_names:
-            type_names[k].extend(alias)
-        else:
-            type_names[k] = alias
-
-
-# Merge void names
-void_names = []
-for k, v in aliases.items():
-    if k not in v:
-        v.append(k)
-    void_names.append(v)
-
+#parser = TypeParser('https://doc-bot.tmall.com/docs/doc.htm?articleId=108271&docType=1')
+#parser = TypeParser('https://www.aligenie.com/doc/357554/eq19cg', 1)
+parser = TypeParser('https://www.aligenie.com/doc/357554/gxhx67', 1, 1)
+aliases = json.load(urlopen('https://open.bot.tmall.com/oauth/api/aliaslist'))['data']
 places = json.load(urlopen('https://open.bot.tmall.com/oauth/api/placelist'))['data']
+
+aliases = {i['key']: (i['value'] if i['key'] in i['value'] else [i['key']] + i['value']) for i in aliases}
+parser.merge_aliases(aliases)
+parser.hack_aliases({
+    'heater': ['地暖'],  # TEST
+    'airpurifier': ['净化器'],
+}, aliases)
 
 # Generate
 if len(sys.argv) > 1 and sys.argv[1] == 'md':
     print('区域名称：' + ','.join(places) + '\n')
-    print('设备名称：' + ';'.join([','.join(v) for k, v in type_names.items()]) + '\n')
-    print('未知类型：' + ';'.join([','.join(i) for i in void_names]) + '\n')
+    print('设备名称：' + ';'.join([','.join(v) for k, v in parser.result.items()]) + '\n')
+    print('未知类型：' + ';'.join([','.join(v) for k, v in aliases.items()]) + '\n')
 else:
     print('ZONE_PLACES = ' + str(places) + '\n')
-    print('TYPE_NAMES = ' + str(type_names).replace('{', '{\n    ').replace('}', '\n}').replace('], ', '],\n    ') + '\n')
-    #print('VOID_NAMES = ' + str(void_names).replace('[[', '[\n    [').replace(']]', ']\n]').replace('], ', '], \n    ') + '\n')
+    print('TYPE_NAMES = ' + str(parser.result).replace('{', '{\n    ').replace('}', '\n}').replace('], ', '],\n    ') + '\n')
+    #print('VOID_NAMES = ' + str([v for k, v in aliases.items()]).replace('[[', '[\n    [').replace(']]', ']\n]').replace('], ', '], \n    ') + '\n')

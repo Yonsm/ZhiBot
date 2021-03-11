@@ -80,8 +80,8 @@ zhibot:
 
 ```yaml
 genie_zone: 客厅
-genie_deviceName: 吸顶灯
-genie_deviceType: outlet
+genie_name: 吸顶灯
+genie_type: outlet
 ```
 
 其中 `genie_zone` 可以配置给单个设备，也可以配置给分组（将应用到分组下的所有设备）。

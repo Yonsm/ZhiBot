@@ -294,8 +294,8 @@ DOMAIN_TYPES = {
 
 
 def guessDeviceType(entity_id, deviceName, attributes):
-    if 'genie_deviceType' in attributes:
-        return attributes['genie_deviceType']
+    if 'genie_type' in attributes:
+        return attributes['genie_type']
 
     domain = entity_id[:entity_id.find('.')]
     if domain == 'sensor':
@@ -320,7 +320,7 @@ def guessDeviceType(entity_id, deviceName, attributes):
 
 def guessZoneName(entity_id, friendly_name, attributes, groups_attributes):
     zone = None
-    name = attributes.get('genie_deviceName')
+    name = attributes.get('genie_name')
     for place in ZONE_PLACES:
         if name and name.startswith(place):
             zone = place

@@ -68,10 +68,7 @@ places = json.load(urlopen('https://open.bot.tmall.com/oauth/api/placelist'))['d
 
 aliases = {i['key']: (i['value'] if i['key'] in i['value'] else [i['key']] + i['value']) for i in aliases}
 parser.merge_aliases(aliases)
-parser.hack_aliases({
-    'heater': ['地暖'],  # TEST
-    'airpurifier': ['净化器'],
-}, aliases)
+# parser.hack_aliases({'airpurifier': ['净化器']}, aliases)
 
 # Generate
 if len(sys.argv) > 1 and sys.argv[1] == 'md':

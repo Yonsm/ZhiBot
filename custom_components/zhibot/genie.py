@@ -173,7 +173,7 @@ TYPE_NAMES = {
     'light': ['灯', '房灯', '吸顶灯', '床头灯', '床灯', '电灯', '吊灯', '台灯', '落地灯', '壁灯', '挂灯', '射灯', '筒灯', '灯带', '灯条', '暗藏灯', '背景灯', '阅读灯', '柜灯', '衣柜灯', '天花灯', '路灯', '彩灯'],
     'aircondition': ['空调', '空气调节器', '挂式空调'],
     'fan': ['风扇', '电风扇', '落地扇', '电扇', '台扇', '壁扇', '顶扇', '驱蚊风扇', '暖风扇', '净化暖风扇', '冷风扇', '塔扇'],
-    'airpurifier': ['空气净化器', '空净', '空气清洁器', '净化器'],
+    'airpurifier': ['空气净化器', '空净', '空气清洁器'],
     'roboticvacuum': ['扫地机器人', '扫地机', '打扫机', '自动打扫机'],
     'curtain': ['窗帘', '窗纱', '布帘', '纱帘', '百叶帘', '卷帘'],
     'humidifier': ['加湿器', '空气加湿器', '加湿机', '空气加湿机'],
@@ -195,7 +195,7 @@ TYPE_NAMES = {
     'cooker': ['电饭煲', '电饭锅', '饭煲', '饭锅'],
     'aquarium': ['水族箱控制器', '智能鱼缸', '鱼缸'],
     'facesteam': ['蒸脸器'],
-    'heater': ['取暖器', '加热器', '地暖'],
+    'heater': ['取暖器', '加热器'],
     'foodprocesser': ['料理机'],
     'washmachine': ['洗衣机', '顶开式洗衣机', '滚筒洗衣机'],
     'microwaveoven': ['微波炉'],
@@ -305,12 +305,14 @@ def guessDeviceType(entity_id, deviceName, attributes):
         return None
 
     for k, v in TYPE_NAMES.items():
-        if deviceName in v:
-            return k
+        for i in v:
+            if deviceName in i:
+                return k
 
     # for v in VOID_NAMES:
-    #     if deviceName in v:
-    #         return DOMAIN_TYPES[domain]
+    #     for i in v:
+    #         if deviceName in i:
+    #             return DOMAIN_TYPES[domain]
 
     _LOGGER.warn('%s “%s”不是规范的名称，请参考 https://github.com/Yonsm/ZhiBot#4-名称规范', entity_id, deviceName)
     return DOMAIN_TYPES[domain]

@@ -42,8 +42,6 @@ class TypeParser(HTMLParser):
             if v in aliases:
                 self.result[k] = aliases[v]
                 del aliases[v]
-            else:
-                self.result[k] = [v]
 
     def hack_aliases(self, hack, aliases):
         for k, vs in hack.items():
@@ -52,9 +50,9 @@ class TypeParser(HTMLParser):
                     alias = aliases[v]
                     del aliases[v]
                 else:
-                    alias = [v]
+                    alias = v
                 if k in self.result:
-                    self.result[k].extend(alias)
+                    self.result[k] += ',' + alias
                 else:
                     self.result[k] = alias
 
@@ -66,16 +64,16 @@ parser = TypeParser('https://www.aligenie.com/doc/357554/gxhx67', 1, 1)
 aliases = json.load(urlopen('https://open.bot.tmall.com/oauth/api/aliaslist'))['data']
 places = json.load(urlopen('https://open.bot.tmall.com/oauth/api/placelist'))['data']
 
-aliases = {i['key']: (i['value'] if i['key'] in i['value'] else [i['key']] + i['value']) for i in aliases}
+aliases = {i['key']: ','.join(i['value'] if i['key'] in i['value'] else [i['key']] + i['value']) for i in aliases}
 parser.merge_aliases(aliases)
 # parser.hack_aliases({'airpurifier': ['净化器']}, aliases)
 
 # Generate
 if len(sys.argv) > 1 and sys.argv[1] == 'md':
     print('区域名称：' + ','.join(places) + '\n')
-    print('设备名称：' + ';'.join([','.join(v) for k, v in parser.result.items()]) + '\n')
-    print('未知类型：' + ';'.join([','.join(v) for k, v in aliases.items()]) + '\n')
+    print('设备名称：' + ';'.join([v for k, v in parser.result.items()]) + '\n')
+    print('未知类型：' + ';'.join([v for k, v in aliases.items()]) + '\n')
 else:
     print('ZONE_PLACES = ' + str(places) + '\n')
-    print('TYPE_NAMES = ' + str(parser.result).replace('{', '{\n    ').replace('}', '\n}').replace('], ', '],\n    ') + '\n')
-    #print('VOID_NAMES = ' + str([v for k, v in aliases.items()]).replace('[[', '[\n    [').replace(']]', ']\n]').replace('], ', '], \n    ') + '\n')
+    print('TYPE_NAMES = ' + str(parser.result).replace('{', '{\n    ').replace('}', '\n}').replace(', ', ',\n    ') + '\n')
+    #print('VOID_NAMES = ' + str([v for k, v in aliases.items()]).replace('[', '[\n    ').replace(']', '\n]').replace(', ', ', \n    ') + '\n')

@@ -34,7 +34,6 @@ async def handleRequest(hass, request):
     payload = request['payload']
 
     properties = None
-    name = header['name']
     namespace = header['namespace']
     if namespace == 'AliGenie.Iot.Device.Discovery':
         _payload = await discoveryDevice(hass)

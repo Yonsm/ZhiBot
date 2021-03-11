@@ -22,23 +22,26 @@ class RemoteHass:
         headers = {'Authorization': 'Bearer ' + self.token,
                    'Content-Type': 'application/json'} if self.token else None
         text = requests.request(method, url, json=data, headers=headers, verify=False).text
-        #_LOGGER.info('REST RESPONSE: %s', text)
-        return json.loads(text)
+        try:
+            return json.loads(text)
+        except Exception as e:
+            _LOGGER.error("%s: %s", e, text)
+            return None
 
     def async_all(self):
         from collections import namedtuple
-        states = []
-        for d in self.rest('states'):
-            states.append(namedtuple('EntityState', d.keys())(*d.values()))
-        return states
+        entities = []
+        for d in self.rest('states') or []:
+            entities.append(namedtuple('EntityState', d.keys())(*d.values()))
+        return entities
 
     def get(self, entity_id):
         from collections import namedtuple
-        d = self.rest('states/' + entity_id)
-        return namedtuple('EntityState', d.keys())(*d.values())
+        state = self.rest('states/' + entity_id) or {}
+        return namedtuple('EntityState', state.keys())(*state.values())
 
     async def async_call(self, domain, service, data, blocking=False):
-        return self.rest('services/' + domain + '/' + service, data)
+        return self.rest('services/' + domain + '/' + service, data) or []
 
 
 async def main():
@@ -62,18 +65,17 @@ async def main():
     }
 
     requests.packages.urllib3.disable_warnings()
-    try:
-        if mode:
-            text = requests.request('POST', argv[1] + '/geniebot', json=data, verify=False).text
-            response = json.loads(text)
-        else:
-            response = await handleRequest(RemoteHass(argv[1], argv[2]), data)
-    except:
-        import traceback
-        print(traceback.format_exc())
-        response = makeResponse('SERVICE_ERROR')
-    print(json.dumps(response, indent=2, ensure_ascii=False))
+    if mode:
+        text = requests.request('POST', argv[1] + '/geniebot?token=' + argv[2], json=data, verify=False).text
+        response = json.loads(text)
+    else:
+        response = await handleRequest(RemoteHass(argv[1], argv[2]), data)
 
+    devices = response['payload'].get('devices')
+    if devices:
+        response = [i['deviceId'] + '|' + i['model'] + '=' + i['deviceType'] + '|' + i['zone'] + '/' + i['deviceName'] for i in devices]
+
+    print(json.dumps(response, indent=2, ensure_ascii=False))
 
 if __name__ == '__main__':
     _LOGGER.setLevel(logging.DEBUG)

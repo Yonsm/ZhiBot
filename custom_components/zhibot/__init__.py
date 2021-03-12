@@ -17,21 +17,22 @@ DOMAIN = 'zhibot'
 
 async def async_setup(hass, config):
     for conf in config.get(DOMAIN):
-        platform = conf['platform'] + 'bot'
+        platform = conf['platform']
+        botname = platform + 'bot'
         module = import_module('.' + platform, __package__)
-        Class = getattr(module, platform)
-        hass.http.register_view(Class(platform, hass, conf))
+        Class = getattr(module, botname)
+        hass.http.register_view(Class(botname, hass, conf))
     return True
 
 
 class basebot(HomeAssistantView):
     """View to handle Configuration requests."""
 
-    def __init__(self, platform, hass, conf):
+    def __init__(self, botname, hass, conf):
         self.hass = hass
         self.name = slugify(conf['name']) if 'name' in conf else None
 
-        self.url = '/' + (self.name or platform)
+        self.url = '/' + (self.name or botname)
         self.requires_auth = False
 
         self.token = conf.get('token')
@@ -39,7 +40,7 @@ class basebot(HomeAssistantView):
         if self.token:
             info += '?token=' + self.token
         else:
-            self.init_auth(platform)
+            self.init_auth(botname)
         _LOGGER.info(info)
 
     async def post(self, request):
@@ -68,9 +69,9 @@ class basebot(HomeAssistantView):
             return self.token == '*' or self.token == request.query.get('token') or self.token == request.headers.get('token')
         return await self.async_check_auth(data)
 
-    def init_auth(self, platform):
+    def init_auth(self, botname):
         self._auth_ui = None
-        self._auth_path = self.hass.config.path(STORAGE_DIR, platform)
+        self._auth_path = self.hass.config.path(STORAGE_DIR, botname)
         self._auth_users = load_json(self._auth_path) or []
 
     async def async_check_auth(self, data):
@@ -113,7 +114,7 @@ class basebot(HomeAssistantView):
 
 class oauthbot(basebot):
 
-    def init_auth(self, platform):
+    def init_auth(self, botname):
         # TODO: 这TMD到底是不是 OAuth 的最佳姿势？严重怀疑，我也不知道哪里抄来的姿势
         store = self.hass.auth._store
         self._async_create_refresh_token = store.async_create_refresh_token

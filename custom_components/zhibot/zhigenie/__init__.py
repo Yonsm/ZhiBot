@@ -293,7 +293,7 @@ def guessDeviceType(domain, deviceName, attributes):
     #     if deviceName in v:
     #         return DOMAIN_TYPES[domain]
 
-    _LOGGER.warn('%s “%s”不是规范的名称，请参考 https://github.com/Yonsm/ZhiBot#4-名称规范', entity_id, deviceName)
+    _LOGGER.warn('“%s”不是规范的名称，请参考 https://github.com/Yonsm/ZhiBot#4-名称规范', deviceName)
     return DOMAIN_TYPES[domain]
 
 

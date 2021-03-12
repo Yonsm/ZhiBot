@@ -1,5 +1,5 @@
 from . import oauthbot
-from .genie import handleRequest, makeResponse
+from .zhigenie import handleRequest, makeResponse
 
 import logging
 _LOGGER = logging.getLogger(__name__)

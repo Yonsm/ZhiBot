@@ -4,7 +4,7 @@ import json
 import asyncio
 import requests
 import logging
-from genie import handleRequest, makeResponse, _LOGGER
+from __init__ import handleRequest, _LOGGER
 
 
 class RemoteHass:

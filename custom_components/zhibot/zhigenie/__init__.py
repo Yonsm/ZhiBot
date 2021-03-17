@@ -106,6 +106,8 @@ async def controlDevice(hass, header, payload):
     data = {"entity_id": entity_id}
     if domain == 'cover':
         service = 'close_cover' if service == 'turn_off' else 'open_cover'
+    elif domain == 'vacuum':
+        service = 'return_to_base' if service == 'turn_off' else 'start'
 
     result = await hass.services.async_call(domain, service, data, True)
     return {} if result is not None else errorPayload('IOT_DEVICE_OFFLINE')

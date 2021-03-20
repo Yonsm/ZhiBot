@@ -105,10 +105,14 @@ async def controlDevice(hass, header, payload):
     domain = entity_id[:entity_id.find('.')]
     data = {"entity_id": entity_id}
     if domain == 'cover':
-        service = 'close_cover' if service == 'turn_off' else 'open_cover'
+        if entity_id.endswith('mu_bu') or entity_id.endswith('liang_yi_jia'):  # MAGIC code, should be better?
+            service = 'close_cover' if service != 'turn_off' else 'open_cover'
+        else:
+            service = 'close_cover' if service == 'turn_off' else 'open_cover'
     elif domain == 'vacuum':
         service = 'return_to_base' if service == 'turn_off' else 'start'
 
+    _LOGGER.info("Control %s for %s", service, entity_id)
     result = await hass.services.async_call(domain, service, data, True)
     return {} if result is not None else errorPayload('IOT_DEVICE_OFFLINE')
 
@@ -376,5 +380,5 @@ def makeSensorProp(attributes, state):
 
 
 def makePowerProp(state):
-    off = ['off', 'not_home', 'open', 'opening', 'docked', 'idle', 'unavailable', 'unknown', None]
+    off = ['off', 'not_home', 'closed', 'closing', 'docked', 'idle', 'unavailable', 'unknown', None]
     return {'name': 'powerstate', 'value': 'off' if state in off else 'on'}

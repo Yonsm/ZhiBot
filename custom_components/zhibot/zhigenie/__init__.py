@@ -112,7 +112,7 @@ async def controlDevice(hass, header, payload):
     elif domain == 'vacuum':
         service = 'return_to_base' if service == 'turn_off' else 'start'
 
-    _LOGGER.info("Control %s for %s", service, entity_id)
+    _LOGGER.info("Control: %s %s", service, entity_id)
     result = await hass.services.async_call(domain, service, data, True)
     return {} if result is not None else errorPayload('IOT_DEVICE_OFFLINE')
 

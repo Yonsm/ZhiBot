@@ -128,10 +128,11 @@ class oauthbot(basebot):
         client_icon: Optional[str] = None,
         token_type: str = models.TOKEN_TYPE_NORMAL,
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
+        credential: Optional[models.Credentials] = None,
     ) -> models.RefreshToken:
         if access_token_expiration == ACCESS_TOKEN_EXPIRATION:
             access_token_expiration = timedelta(days=365)
-        return await self._async_create_refresh_token(user, client_id, client_name, client_icon, token_type, access_token_expiration)
+        return await self._async_create_refresh_token(user, client_id, client_name, client_icon, token_type, access_token_expiration, credential)
 
     async def async_check_token(self, token):
         return await self.hass.auth.async_validate_access_token(token) is not None

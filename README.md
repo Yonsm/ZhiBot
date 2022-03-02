@@ -31,7 +31,7 @@ zhibot:
 
 #### 2). 服务设置
 
-- 网关 URL：`https://xxx.xxx.xxx:8123//genie`
+- 网关 URL：`https://xxx.xxx.xxx:8123/geniebot`
 - Client ID：`https://open.bot.tmall.com`
 - Client Secret：`NA`
 - Authorization URL：`https://xxx.xxx.xxx:8123/auth/authorize`

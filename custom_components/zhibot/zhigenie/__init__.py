@@ -84,6 +84,9 @@ async def discoveryDevice(hass):
             prop = makePowerProp(state.state)
             actions = ['TurnOn', 'TurnOff', 'Query', 'QueryPowerState']
 
+        #icon = attributes.get('icon')
+        #icon = ('https://raw.githubusercontent.com/material-icons/material-icons-png/master/png/black/' + icon[4:] + '/round-4x.png') if icon else 'https://home-assistant.io/images/favicon-192x192.png'
+
         devices.append({
             'deviceId': entity_id,
             'deviceName': deviceName,

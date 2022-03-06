@@ -53,8 +53,8 @@ class genie2bot(basebot):
         qt = {'action': '全部动作', 'name': '全部名称', 'place': '全部位置', 'device': '全部设备'}
         if q == 'corpus' or q in qt:
             if q == 'corpus':
-                #body = 'dialog;action;name\n@{action}@{device};;\n@{name};;\n@{action};;\n'
-                body = 'dialog;action;device\n@{action}@{place}@{device};;\n@{action}@{device};;\n@{action}@{place};;\n@{device};;\n@{place};;\n@{action};;\n'
+                #body = 'dialog;action;name\n@{action}@{name};;\n@{action};;\n@{name};;\n'
+                body = 'dialog;action;device\n@{action}@{place}@{device};;\n@{action}@{place};;\n@{action}@{device};;\n@{place}@{device};;\n@{action};;\n@{place};;\n@{device};;\n'
             else:
                 body = await zhiChat(self.hass, qt[q])
                 if q != 'action':

@@ -2,8 +2,25 @@ from . import basebot
 from .zhichat import zhiChat
 from homeassistant.components.http import HomeAssistantView
 
+from aiohttp import web
+
 import logging
 _LOGGER = logging.getLogger(__name__)
+
+
+class genie2view(HomeAssistantView):
+    """View to handle Configuration requests."""
+
+    def __init__(self, conf):
+        self.name = 'aligenie/' + conf['file'] + '.txt'
+        self.url = '/' + self.name
+        self.text = conf['text']
+        self.requires_auth = False
+        _LOGGER.info("Serving on " + self.url)
+
+    async def get(self, request):
+        _LOGGER.info("%s", request)
+        return self.text
 
 
 class genie2bot(basebot):
@@ -31,17 +48,18 @@ class genie2bot(basebot):
             }
         }
 
-class genie2view(HomeAssistantView):
-    """View to handle Configuration requests."""
-
-    def __init__(self, conf):
-        self.name = 'aligenie/' + conf['file'] + '.txt'
-        self.url = '/' + self.name
-        self.text = conf['text']
-        self.requires_auth = False
-        _LOGGER.info("Serving on " + self.url)
-
     async def get(self, request):
-        _LOGGER.error("HTTP GET %s" % request)
-        return self.text
-
+        q = request.query.get('q')
+        qt = {'action': '全部动作', 'name': '全部名称', 'place': '全部位置', 'device': '全部设备'}
+        if q == 'corpus' or q in qt:
+            if q == 'corpus':
+                body = 'dialog;action;device\n@{action}@{device};;\n@{device};;\n'
+            else:
+                body = (await zhiChat(self.hass, qt[q])).replace('\n', ';\n')
+            headers = {'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="%s.csv"' % q}
+        elif await self.async_check(request):
+            body = await zhiChat(self.hass, q)
+            headers = {'Content-Type': 'text/plain'}
+        else:
+            body = "没有访问授权！"
+        return web.Response(body=body, headers=headers)

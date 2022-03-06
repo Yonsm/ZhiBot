@@ -64,7 +64,7 @@ class basebot(HomeAssistantView):
     async def async_handle(self, data):
         raise NotImplementedError()
 
-    async def async_check(self, request, data):
+    async def async_check(self, request, data=None):
         if self.token:
             return self.token == '*' or self.token == request.query.get('token') or self.token == request.headers.get('token')
         return await self.async_check_auth(data)

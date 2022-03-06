@@ -34,7 +34,7 @@ async def zhiChat(hass, query):
         return '\n'.join([i[0] + ';' + ('|'.join(i[1:]) if len(i) > 1 else '') for i in ALL_INTENTS]) + '\n'
 
     states = hass.states.async_all()
-    if action.startswith('全部'):
+    if action and action.startswith('全部'):
         items = []
 
         async def name_callback(domain, entity_id, entity_name, state, attributes):

@@ -6,7 +6,7 @@ INTENT_OPEN = ['打开', '开', '开启']
 INTENT_CLOSE = ['关闭', '关', '关上']
 INTENT_QUERY = ['查询', '查']
 
-INTENT_ACTION = ['全部动作', '帮助', '求助', '需要帮助', '?', '？']
+INTENT_ACTION = ['全部动作', '帮助', '求助', '?', '？']
 INTENT_NAME = ['全部名称']
 INTENT_PLACE = ['全部位置', '全部房间', '全部区域']
 INTENT_DEVICE = ['全部设备']
@@ -31,75 +31,66 @@ async def zhiChat(hass, query):
             break
 
     if action == '全部动作':
-        return '\n'.join([';'.join(i) for i in ALL_INTENTS])
+        return '\n'.join([i[0] + ';' + ('|'.join(i[1:]) if len(i) > 1 else '') for i in ALL_INTENTS]) + '\n'
 
     states = hass.states.async_all()
-    if action == '全部名称':
-        names = []
-        for state in states:
-            entity_id = state.entity_id
-            domain = entity_id[:entity_id.find('.')]
-            if domain not in ['zone', 'persistent_notification']:
-                attributes = state.attributes
-                friendly_name = attributes.get('friendly_name')
-                if friendly_name:
-                    names.append(friendly_name)
-        if names:
-            return '\n'.join(names)
+    if action.startswith('全部'):
+        items = []
 
-    elif action == '全部位置':
-        places = []
-        all_places = [i for i in ALL_PLACES]
-        for state in states:
-            entity_id = state.entity_id
-            domain = entity_id[:entity_id.find('.')]
-            if domain not in ['zone', 'persistent_notification']:
-                attributes = state.attributes
-                friendly_name = attributes.get('friendly_name')
-                if friendly_name:
-                    place, device = zhiSplit(ALL_PLACES, friendly_name)
-                    if place is not None and place not in places:
-                        places.append(device)
-        return '\n'.join(places) if places else "未找到位置"
+        async def name_callback(domain, entity_id, entity_name, state, attributes):
+            items.append(entity_name)
 
-    elif action == '全部设备':
-        devices = []
-        for state in states:
-            entity_id = state.entity_id
-            domain = entity_id[:entity_id.find('.')]
-            if domain not in ['zone', 'persistent_notification']:
-                attributes = state.attributes
-                friendly_name = attributes.get('friendly_name')
-                if friendly_name:
-                    place, device = zhiSplit(ALL_PLACES, friendly_name)
-                    if device not in devices:
-                        devices.append(device)
-        if devices:
-            return '\n'.join(devices)
+        async def place_callback(domain, entity_id, entity_name, state, attributes):
+            place, _ = zhiSplit(ALL_PLACES, entity_name)
+            if place is not None and place not in items:
+                items.append(place)
+
+        async def device_callback(domain, entity_id, entity_name, state, attributes):
+            _, device = zhiSplit(ALL_PLACES, entity_name)
+            if device not in items:
+                items.append(device)
+
+        await zhiStates(states, device_callback if action == '全部设备' else (place_callback if action == '全部位置' else name_callback))
+
+        if items:
+            return '\n'.join(items) + '\n'
+        elif action == '全部位置':
+            return "未找到位置"
 
     else:
-        answer = await zhiStates(hass, states, action, name) or await zhiStates(hass, states, action, name, False)
+        answer = await zhiAction(hass, states, action, name) or await zhiAction(hass, states, action, name, False)
         if answer:
             return answer
 
     return "未找到设备"
 
 
-async def zhiStates(hass, states, action, name, exact=True):
+async def zhiAction(hass, states, action, name, exact=True):
     answers = ''
     place, device = zhiSplit(ALL_PLACES, name)
+
+    async def callback(domain, entity_id, entity_name, state, attributes):
+        if zhiMatch(domain, entity_name, name, place, device, exact):
+            answer = entity_name + await zhiState(hass, domain, entity_id, state.state, attributes, action)
+            if exact:
+                return answer
+            nonlocal answers
+            answers += answer + '\n'
+
+    return await zhiStates(states, callback) or answers
+
+
+async def zhiStates(states, callback):
     for state in states:
         entity_id = state.entity_id
         domain = entity_id[:entity_id.find('.')]
         if domain not in ['zone', 'persistent_notification']:
             attributes = state.attributes
             entity_name = attributes.get('friendly_name')
-            if entity_name and zhiMatch(domain, entity_name, name, place, device, exact):
-                answer = entity_name + await zhiState(hass, domain, entity_id, state.state, attributes, action)
-                if exact:
+            if entity_name:
+                answer = await callback(domain, entity_id, entity_name, state, attributes)
+                if answer:
                     return answer
-                answers += answer + '\n'
-    return answers
 
 
 def zhiMatch(domain, entity_name, name, place, device, exact):

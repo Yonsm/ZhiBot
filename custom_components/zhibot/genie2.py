@@ -53,13 +53,14 @@ class genie2bot(basebot):
         qt = {'action': '全部动作', 'name': '全部名称', 'place': '全部位置', 'device': '全部设备'}
         if q == 'corpus' or q in qt:
             if q == 'corpus':
-                body = 'dialog;action;device\n@{action}@{device};;\n@{device};;\n'
+                #body = 'dialog;action;name\n@{action}@{device};;\n@{name};;\n@{action};;\n'
+                body = 'dialog;action;device\n@{action}@{place}@{device};;\n@{action}@{device};;\n@{action}@{place};;\n@{device};;\n@{place};;\n@{action};;\n'
             else:
-                body = (await zhiChat(self.hass, qt[q])).replace('\n', ';\n')
+                body = await zhiChat(self.hass, qt[q])
+                if q != 'action':
+                    body = body.replace('\n', ';\n')
             headers = {'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="%s.csv"' % q}
-        elif await self.async_check(request):
-            body = await zhiChat(self.hass, q)
-            headers = {'Content-Type': 'text/plain'}
         else:
-            body = "没有访问授权！"
+            headers = {'Content-Type': 'text/plain'}
+            body = await zhiChat(self.hass, q) if await self.async_check(request) else "没有访问授权！"
         return web.Response(body=body, headers=headers)

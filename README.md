@@ -10,6 +10,17 @@ _提示：如果只用了单个平台，可以把未使用的平台文件删除�
 
 **配置**：参见下文。也可以参考 [我的 Home Assistant 配置](https://github.com/Yonsm/.homeassistant) 中 [configuration.yaml](https://github.com/Yonsm/.homeassistant/blob/main/configuration.yaml)
 
+## 零、天猫精灵个人技能机器人（强烈推荐） [genie2bot](https://github.com/Yonsm/ZhiBot/blob/main/custom_components/zhibot/genie2bot.py)
+
+![HASS-GENIE1](https://github.com/Yonsm/ZhiBot/blob/main/images/1.jpg)
+![HASS-GENIE2](https://github.com/Yonsm/ZhiBot/blob/main/images/2.jpg)
+![HASS-GENIE3](https://github.com/Yonsm/ZhiBot/blob/main/images/3.jpg)
+![HASS-GENIE4](https://github.com/Yonsm/ZhiBot/blob/main/images/4.jpg)
+![HASS-GENIE5](https://github.com/Yonsm/ZhiBot/blob/main/images/5.jpg)
+![HASS-GENIE6](https://github.com/Yonsm/ZhiBot/blob/main/images/6.jpg)
+![HASS-GENIE7](https://github.com/Yonsm/ZhiBot/blob/main/images/7.jpg)
+![HASS-GENIE8](https://github.com/Yonsm/ZhiBot/blob/main/images/8.jpg)
+
 ## 一、天猫精灵机器人 [geniebot](https://github.com/Yonsm/ZhiBot/blob/main/custom_components/zhibot/genie.py)
 
 一次性接入 Home Assistant 的大部分设备到天猫精灵，通过天猫精灵语音控制开关设备、查询传感器。无需第三方服务器，直接使用 Home Assistant 作为服务器和 OAuth，链路高效。
@@ -45,7 +56,7 @@ zhibot:
 
 天猫精灵开放平台已升级为 2.0，但新版竟然没有 `设备解绑` 的功能。虽然旧版已无法新增 `智能家居` 技能，但可以解绑设备：`控制台` → `技能应用平台` → [内容&IOT 技能](https://iap.aligenie.com/console/skill/list) → `服务设置` → `测试验证` → `测试已开启` → `设备解绑`。
 
-另外，这里有 [旧版本配置图示](https://github.com/Yonsm/ZhiBot/blob/main/HASS-GENIE.png?raw=true)，仅供参考。
+另外，这里有 [旧版本配置图示](https://github.com/Yonsm/ZhiBot/blob/main/images/HASS-GENIE.png?raw=true)，仅供参考。
 
 ### 3. 使用方式
 
@@ -108,7 +119,7 @@ _**注意**：`zhibot` 的 `- platform: ding` 没有配置 `name `。_
 
 ### 2. 钉钉群机器人设置
 
-![HASS-DING](https://github.com/Yonsm/ZhiBot/blob/main/HASS-DING.png)
+![HASS-DING](https://github.com/Yonsm/ZhiBot/blob/main/images/HASS-DING.png)
 
 ### 3. 使用方式
 
@@ -153,7 +164,7 @@ _**注意**：必须配置 `name`，并和 `ZhiMsg` 的小爱音箱同名。_
 
 ### 2. 钉钉群机器人设置
 
-![HASS-MIAI](https://github.com/Yonsm/ZhiBot/blob/main/HASS-MIAI.png)
+![HASS-MIAI](https://github.com/Yonsm/ZhiBot/blob/main/images/HASS-MIAI.png)
 
 ### 3. 使用方式
 

@@ -24,13 +24,13 @@ zhibot:
 
 配置后，可以进行对话测试：`https://xxx.xxx.xxx:8123/genie2bot?q=打开客厅灯&token=XXXXXXXX`；也可以在浏览器通过以下链接获取相应的预料库和词汇表：
 
-对话表达语料库：`https://xxx.xxx.xxx:8123/genie2bot?q=corpus`
-动作实体词汇表：`https://xxx.xxx.xxx:8123/genie2bot?q=action`
-位置实体词汇表：`https://xxx.xxx.xxx:8123/genie2bot?q=place`
-设备实体词汇表：`https://xxx.xxx.xxx:8123/genie2bot?q=device`
-名称实体词汇表（不用）：`https://xxx.xxx.xxx:8123/genie2bot`
+- 对话表达语料库：`https://xxx.xxx.xxx:8123/genie2bot?q=corpus`
+- 动作实体词汇表：`https://xxx.xxx.xxx:8123/genie2bot?q=action`
+- 位置实体词汇表：`https://xxx.xxx.xxx:8123/genie2bot?q=place`
+- 设备实体词汇表：`https://xxx.xxx.xxx:8123/genie2bot?q=device`
+- 名称实体词汇表（不用）：`https://xxx.xxx.xxx:8123/genie2bot`
 
-预料库和实体词汇表，在后续的配置后批量导入。
+语料库和实体词汇表，在后续的配置后批量导入。
 
 ### 2. 天猫精灵技能应用平台配置
 

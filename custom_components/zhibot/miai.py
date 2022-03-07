@@ -1,5 +1,7 @@
+
 from . import basebot
 from .zhichat import zhiChat
+from aiohttp import web
 
 import logging
 _LOGGER = logging.getLogger(__name__)
@@ -53,3 +55,22 @@ class miaibot(basebot):
                 # 'to_display': {'type': 0,'text': text}
             }
         }
+
+    async def get(self, request):
+        q = request.query.get('q')
+        qt = {'action': '全部动作', 'name': '全部名称', 'place': '全部位置', 'device': '全部设备'}
+        if q == 'corpus' or q in qt:
+            if q == 'corpus':
+                body = '{action}{place}{device}\n{action}{place}\n{action}{device}\n{place}{device}\n{action}\n{place}\n{device}\n让我家{action}{place}{device}\n让我家{action}{place}\n让我家{action}{device}\n把我家{action}{place}{device}\n把我家{action}{place}\n把我家{action}{device}\n问我家{place}{device}\n问我家{place}\n问我家{device}\n问我家{place}\n问我家{device}\n问我家{action}\n'
+            else:
+                text = await zhiChat(self.hass, qt[q])
+                body = '词条名,同义词（多个同义词之间以英文逗号分隔）\n'
+                if q == 'action':
+                    body += text.replace('|', ',').replace(';', ',"').replace('\n', '"\n')
+                else:
+                    body += text.replace('\n', ',\n')
+            headers = {'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="%s.csv"' % q}
+        else:
+            headers = {'Content-Type': 'text/plain'}
+            body = await zhiChat(self.hass, q) if await self.async_check(request) else "没有访问授权！"
+        return web.Response(body=body, headers=headers)

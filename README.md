@@ -10,7 +10,31 @@ _提示：如果只用了单个平台，可以把未使用的平台文件删除�
 
 **配置**：参见下文。也可以参考 [我的 Home Assistant 配置](https://github.com/Yonsm/.homeassistant) 中 [configuration.yaml](https://github.com/Yonsm/.homeassistant/blob/main/configuration.yaml)
 
-## 零、天猫精灵个人技能机器人（强烈推荐） [genie2bot](https://github.com/Yonsm/ZhiBot/blob/main/custom_components/zhibot/genie2bot.py)
+## 零、天猫精灵个人技能机器人（强烈推荐） [genie2bot](https://github.com/Yonsm/ZhiBot/blob/main/custom_components/zhibot/genie2.py)
+
+### 1. Home Assistant 配置
+
+```yaml
+zhibot:
+  - platform: genie2
+    token: XXXXXXXX
+    file: !secret zhibot_file（天猫精灵-个人技能-后端服务-编辑-下载认证文件，文件名，不包含.txt）
+    text: !secret zhibot_text（认证文件文件内容）
+```
+
+配置后，可以进行对话测试：`https://xxx.xxx.xxx:8123/genie2bot?q=打开客厅灯&token=XXXXXXXX`；也可以在浏览器通过以下链接获取相应的预料库和词汇表：
+
+- 对话表达语料库：`https://xxx.xxx.xxx:8123/genie2bot?q=corpus`
+- 动作实体词汇表：`https://xxx.xxx.xxx:8123/genie2bot?q=action`
+- 位置实体词汇表：`https://xxx.xxx.xxx:8123/genie2bot?q=place`
+- 设备实体词汇表：`https://xxx.xxx.xxx:8123/genie2bot?q=device`
+- 名称实体词汇表（不用）：`https://xxx.xxx.xxx:8123/genie2bot`
+
+语料库和实体词汇表，在后续的配置后批量导入。
+
+### 2. 天猫精灵技能应用平台配置
+
+登录 [天猫精灵技能应用平台](https://iap.aligenie.com/home)， `创建新技能`  → [个人技能（私域分享）](https://iap.aligenie.com/console/hybird/create?path=newskill&type=personalskill) ，然后按照下面的示意图配置。
 
 ![HASS-GENIE1](https://github.com/Yonsm/ZhiBot/blob/main/images/1.jpg)
 ![HASS-GENIE2](https://github.com/Yonsm/ZhiBot/blob/main/images/2.jpg)
@@ -20,6 +44,7 @@ _提示：如果只用了单个平台，可以把未使用的平台文件删除�
 ![HASS-GENIE6](https://github.com/Yonsm/ZhiBot/blob/main/images/6.jpg)
 ![HASS-GENIE7](https://github.com/Yonsm/ZhiBot/blob/main/images/7.jpg)
 ![HASS-GENIE8](https://github.com/Yonsm/ZhiBot/blob/main/images/8.jpg)
+
 
 ## 一、天猫精灵机器人 [geniebot](https://github.com/Yonsm/ZhiBot/blob/main/custom_components/zhibot/genie.py)
 

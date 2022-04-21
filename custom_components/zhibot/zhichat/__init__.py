@@ -144,14 +144,12 @@ STATE_NAMES = {
     'closing': '正在闭合',
 }
 
-
 async def zhiState(hass, domain, entity_id, state, attributes, action):
-    is_cover = domain == 'cover'  # or entity_id == 'group.all_covers'
     can_action = not domain in ['sensor', 'binary_sensor', 'device_tracker', 'person']
     if can_action and action == '打开':
-        service = 'open_cover' if is_cover else 'turn_on'
+        service = 'open_cover' if domain == 'cover' else ('start' if domain == 'vacuum' else 'turn_on')
     elif can_action and action == '关闭':
-        service = 'close_cover' if is_cover else 'turn_off'
+        service = 'close_cover' if domain == 'cover' else ('return_to_base' if domain == 'vacuum' else 'turn_off')
     elif domain == 'automation':
         service = 'trigger'
         action = '触发'

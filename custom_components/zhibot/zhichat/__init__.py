@@ -3,7 +3,7 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 
 INTENT_OPEN = ['打开', '开', '开启']
-INTENT_CLOSE = ['关闭', '关', '关上']
+INTENT_CLOSE = ['关闭', '关', '关上', '关掉']
 INTENT_QUERY = ['查询', '查']
 
 INTENT_ACTION = ['全部动作', '帮助', '求助', '?', '？']
@@ -180,6 +180,32 @@ async def zhiState(hass, domain, entity_id, state, attributes, action, exact):
         temp = attributes.get('current_temperature')
         if isinstance(temp, (int, float)):
             extra = '，温度' + str(temp)
+    elif domain == 'weather':
+        WEATHER_TEXTS = {
+            'clear-night': '晴夜',
+            'cloudy': '阴',
+            'fog': '雾',
+            'hail': '冰雹',
+            'lightning': '雷电',
+            'lightning-rainy': '雷阵雨',
+            'partlycloudy': '白天多云',
+            'partlycloudy': '夜间多云',
+            'pouring': '暴雨',
+            'rainy': '雨',
+            'snowy': '雪',
+            'snowy-rainy': '雨夹雪',
+            'sunny': '晴天',
+            'windy': '大风',
+            'windy-variant': '雾霾有风',
+        }
+        if state in WEATHER_TEXTS:
+            state = WEATHER_TEXTS[state]
+        temp = attributes.get('temperature')
+        if isinstance(temp, (int, float)):
+            extra = '，温度' + str(temp)
+        attr = attributes.get('attribution')
+        if attr:
+            extra = '，' + attr
     return '为' + (STATE_NAMES[state] if state in STATE_NAMES else state) + extra
 
 

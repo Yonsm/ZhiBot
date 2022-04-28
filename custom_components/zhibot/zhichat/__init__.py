@@ -70,12 +70,13 @@ async def zhiAction(hass, states, action, name, exact=True):
     place, device = zhiSplit(ALL_PLACES, name)
 
     async def callback(domain, entity_id, entity_name, state, attributes):
-        if zhiMatch(domain, entity_name, name, place, device, exact):
-            answer = entity_name + await zhiState(hass, domain, entity_id, state.state, attributes, action)
+        if (name == entity_name if exact else zhiMatch(entity_name, place, device)):
+            answer = await zhiState(hass, domain, entity_id, state.state, attributes, action, exact)
             if exact:
-                return answer
-            nonlocal answers
-            answers += answer + '\n'
+                return entity_name + answer
+            elif answer:
+                nonlocal answers
+                answers += entity_name + answer + '\n'
 
     return await zhiStates(states, callback) or answers
 
@@ -84,7 +85,7 @@ async def zhiStates(states, callback):
     for state in states:
         entity_id = state.entity_id
         domain = entity_id[:entity_id.find('.')]
-        if domain not in ['zone', 'persistent_notification']:
+        if domain not in ['zone', 'persistent_notification', 'device_tracker', 'remote']:
             attributes = state.attributes
             entity_name = attributes.get('friendly_name')
             if entity_name:
@@ -93,11 +94,7 @@ async def zhiStates(states, callback):
                     return answer
 
 
-def zhiMatch(domain, entity_name, name, place, device, exact):
-    if exact:
-        return name == entity_name
-    if domain == 'automation':
-        return False
+def zhiMatch(entity_name, place, device):
     entity_place, entity_device = zhiSplit(ALL_PLACES, entity_name)
     return entity_place is not None and ((place == entity_place and device == '') or (place is None and device == entity_device))
 
@@ -144,34 +141,46 @@ STATE_NAMES = {
     'closing': '正在闭合',
 }
 
-async def zhiState(hass, domain, entity_id, state, attributes, action):
-    can_action = not domain in ['sensor', 'binary_sensor', 'device_tracker', 'person']
-    if can_action and action == '打开':
-        service = 'open_cover' if domain == 'cover' else ('start' if domain == 'vacuum' else 'turn_on')
-    elif can_action and action == '关闭':
-        service = 'close_cover' if domain == 'cover' else ('return_to_base' if domain == 'vacuum' else 'turn_off')
-    elif domain == 'automation':
-        service = 'trigger'
-        action = '触发'
-    else:
-        extra = ''
-        if domain == 'vacuum':
-            status = attributes.get('status')
-            if status:
-                state = status
-        elif domain == 'fan':
-            mode = attributes.get('preset_mode')
-            if mode:
-                state = mode
-        elif domain == 'climate':
-            temp = attributes.get('current_temperature')
-            if isinstance(temp, (int, float)):
-                extra = '，温度' + str(temp)
-        return '为' + (STATE_NAMES[state] if state in STATE_NAMES else state) + extra
 
-    data = {'entity_id': entity_id}
-    result = await hass.services.async_call(domain, service, data, True)
-    return action + ("成功" if result else "不成功")
+async def zhiState(hass, domain, entity_id, state, attributes, action, exact):
+    service = None
+    if domain in ['switch', 'light', 'fan', 'climate', 'cover', 'media_player', 'vacuum']:
+        if action == '打开':
+            service = 'open_cover' if domain == 'cover' else ('start' if domain == 'vacuum' else 'turn_on')
+        elif action == '关闭':
+            service = 'close_cover' if domain == 'cover' else ('return_to_base' if domain == 'vacuum' else 'turn_off')
+    elif domain == 'automation':
+        if not exact:
+            return None
+        if action == '打开':
+            service = 'turn_on'
+        elif action == '关闭':
+            service = 'turn_off'
+        elif action is None:
+            service = 'trigger'
+            action = '触发'
+    elif not exact and (action == '打开' or action == '关闭'):
+        return None
+
+    if service:
+        data = {'entity_id': entity_id}
+        result = await hass.services.async_call(domain, service, data, True)
+        return action + ("成功" if result else "不成功")
+
+    extra = ''
+    if domain == 'vacuum':
+        status = attributes.get('status')
+        if status:
+            state = status
+    elif domain == 'fan':
+        mode = attributes.get('preset_mode')
+        if mode:
+            state = mode
+    elif domain == 'climate':
+        temp = attributes.get('current_temperature')
+        if isinstance(temp, (int, float)):
+            extra = '，温度' + str(temp)
+    return '为' + (STATE_NAMES[state] if state in STATE_NAMES else state) + extra
 
 
 def zhiSplit(items, text):

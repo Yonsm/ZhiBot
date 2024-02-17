@@ -165,7 +165,8 @@ async def zhiState(hass, domain, entity_id, state, attributes, action, exact):
     if service:
         data = {'entity_id': entity_id}
         result = await hass.services.async_call(domain, service, data, True)
-        return action + ("成功" if result else "不成功")
+        #_LOGGER.warn("zhiState entity_id: %s, service: %s, result: %s", entity_id, service, result)
+        return action + "成功"
 
     extra = ''
     if domain == 'vacuum':

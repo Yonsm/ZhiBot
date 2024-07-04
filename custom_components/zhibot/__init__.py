@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__package__)
 DOMAIN = 'zhibot'
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     for conf in config.get(DOMAIN):
         platform = conf['platform']
         botname = platform + 'bot'
